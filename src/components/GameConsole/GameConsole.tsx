@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 
@@ -8,6 +8,13 @@ import type { WolfPose } from '../GameSprites';
 import style from './GameConsole.module.less';
 
 type GameMode = 'A' | 'B';
+
+const movementKeys: Record<string, WolfPose> = {
+  KeyQ: 'topLeft',
+  KeyA: 'bottomLeft',
+  KeyP: 'topRight',
+  KeyL: 'bottomRight',
+};
 
 export const GameConsole = () => {
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
@@ -27,6 +34,31 @@ export const GameConsole = () => {
 
     setIsScreenOn(!isScreenOn);
   };
+
+  useEffect(() => {
+    if (!isScreenOn || gameMode === null) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) {
+        return;
+      }
+
+      const nextPose = movementKeys[event.code];
+
+      if (!nextPose) {
+        return;
+      }
+
+      event.preventDefault();
+      setWolfPose(nextPose);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameMode, isScreenOn]);
 
   return (
     <section className={style.shell} aria-label="Электронная игра Ну, погоди!">
