@@ -1,3 +1,43 @@
-.app {
-  text-align: center;
+.page {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #292927;
+  background:
+    radial-gradient(circle at 50% 4%, rgba(255, 255, 255, 0.96), transparent 48%),
+    #eeeae2;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .page {
+    padding: 0;
+  }
+}
+
+@media (max-height: 540px) and (orientation: landscape) {
+  .page {
+    min-height: 100dvh;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 679px) and (orientation: portrait) {
+  .page {
+    align-items: center;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
 }

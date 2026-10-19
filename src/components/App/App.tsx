@@ -1,5 +1,10 @@
 import style from './App.module.less';
+import { GameConsole } from '../GameConsole';
 
 export const App = () => {
-  return <div className={style.app}>Hello world</div>;
+  return (
+    <main className={style.page}>
+      <GameConsole />
+    </main>
+  );
 };
