@@ -1,8 +1,48 @@
 .frame {
+  position: relative;
   height: 100%;
   padding: clamp(3px, 0.45vw, 7px);
   border-radius: clamp(8px, 1.4vw, 18px);
   background: transparent;
+}
+
+.pauseOverlay {
+  position: absolute;
+  z-index: 1;
+  inset: calc(clamp(3px, 0.45vw, 7px) + clamp(8px, 1.3vw, 17px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: clamp(2px, 0.5vw, 7px);
+  color: rgba(242, 244, 224, 0.94);
+  background: rgba(28, 32, 26, 0.28);
+  pointer-events: none;
+
+  svg {
+    width: clamp(140px, 23vw, 360px);
+    height: clamp(140px, 23vw, 360px);
+    filter: drop-shadow(0 3px 3px rgba(28, 32, 26, 0.3));
+  }
+}
+
+.countdown {
+  font-family: 'Courier New', monospace;
+  font-size: clamp(100px, 18vw, 280px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 3px 3px rgba(28, 32, 26, 0.3);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .screen {

@@ -1,29 +1,48 @@
+import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
+
 import style from './GameScreen.module.less';
 import { Chicken, Egg, Rabbit, Wolf } from '../GameSprites';
 import type { WolfPose } from '../GameSprites';
+import { useEggMovement } from './useEggMovement';
+import type { EggMovementMode } from './useEggMovement';
 
 type GameScreenProps = {
   wolfPose: WolfPose | null;
   isScreenOn: boolean;
+  gameMode: EggMovementMode | null;
+  gameSession: number;
+  isPaused: boolean;
+  countdown: number | null;
 };
 
 const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
   topLeft: { x: 228, y: 90 },
-  bottomLeft: { x: 243, y: 190 },
+  bottomLeft: { x: 243, y: 215 },
   topRight: { x: 510, y: 90 },
-  bottomRight: { x: 491, y: 190 },
+  bottomRight: { x: 491, y: 215 },
 };
 
-const Ramp = ({ x, y, mirror = false }: { x: number; y: number; mirror?: boolean }) => (
+const Ramp = ({
+  x,
+  y,
+  mirror = false,
+  gentle = false,
+}: {
+  x: number;
+  y: number;
+  mirror?: boolean;
+  gentle?: boolean;
+}) => (
   <g transform={`translate(${x} ${y}) ${mirror ? 'scale(-1 1)' : ''}`}>
     <path d="M0 0h142l-9 9H0z" />
-    <path d="m91 7 55 42-6 7L82 10z" />
+    <path d={gentle ? 'm78 7 82 41-6 8-84-43z' : 'm91 7 55 42-6 7L82 10z'} />
     <path d="M17 6v54M40 6v39" fill="none" stroke="currentColor" strokeWidth="7" />
   </g>
 );
 
-export const GameScreen = ({ wolfPose, isScreenOn }: GameScreenProps) => {
+export const GameScreen = ({ wolfPose, isScreenOn, gameMode, gameSession, isPaused, countdown }: GameScreenProps) => {
   const wolfPosition = wolfPose ? wolfPositions[wolfPose] : { x: 390, y: 145 };
+  const movingEggs = useEggMovement(gameMode, gameSession, isPaused);
 
   return (
     <div className={style.frame}>
@@ -68,17 +87,16 @@ export const GameScreen = ({ wolfPose, isScreenOn }: GameScreenProps) => {
             <Rabbit x={110} y={17} scale={0.52} />
             <Chicken x={8} y={27} />
             <Ramp x={0} y={88} />
-            <Chicken x={8} y={179} />
-            <Ramp x={0} y={240} />
+            <Chicken x={8} y={145} />
+            <Ramp x={0} y={206} gentle />
             <Chicken x={792} y={27} mirrored />
             <Ramp x={800} y={88} mirror />
-            <Chicken x={792} y={179} mirrored />
-            <Ramp x={800} y={240} mirror />
+            <Chicken x={792} y={145} mirrored />
+            <Ramp x={800} y={206} mirror gentle />
 
-            <Egg x={201} y={162} />
-            <Egg x={606} y={164} />
-            <Egg x={216} y={260} />
-            <Egg x={587} y={262} />
+            {movingEggs.map((egg) => (
+              <Egg key={egg.id} x={egg.x} y={egg.y} />
+            ))}
 
             <Wolf x={wolfPosition.x} y={wolfPosition.y} scale={0.98} pose={wolfPose} />
 
@@ -89,6 +107,18 @@ export const GameScreen = ({ wolfPose, isScreenOn }: GameScreenProps) => {
           </g>
         )}
       </svg>
+      {isScreenOn && isPaused && (
+        <div className={style.pauseOverlay} role="status" aria-live="polite">
+          {countdown === null ? (
+            <PauseRoundedIcon aria-hidden="true" />
+          ) : (
+            <span className={style.countdown}>{countdown}</span>
+          )}
+          <span className={style.visuallyHidden}>
+            {countdown === null ? 'Игра на паузе' : `Игра продолжится через ${countdown}`}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

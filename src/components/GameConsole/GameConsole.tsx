@@ -20,23 +20,81 @@ export const GameConsole = () => {
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const [wolfPose, setWolfPose] = useState<WolfPose | null>(null);
   const [isScreenOn, setIsScreenOn] = useState(true);
+  const [gameSession, setGameSession] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const startGame = (mode: GameMode) => {
+    if (gameMode === mode) {
+      if (isPaused) {
+        setCountdown((currentCountdown) => (currentCountdown === null ? 3 : null));
+      } else {
+        setIsPaused(true);
+        setCountdown(null);
+      }
+
+      return;
+    }
+
     setGameMode(mode);
     setWolfPose(null);
+    setIsPaused(false);
+    setCountdown(null);
+    setGameSession((session) => session + 1);
   };
 
   const toggleScreen = () => {
     if (isScreenOn) {
       setGameMode(null);
       setWolfPose(null);
+      setIsPaused(false);
+      setCountdown(null);
     }
 
     setIsScreenOn(!isScreenOn);
   };
 
   useEffect(() => {
+    if (countdown === null) {
+      return undefined;
+    }
+
+    const countdownTimer = window.setTimeout(() => {
+      if (countdown === 1) {
+        setCountdown(null);
+        setIsPaused(false);
+        return;
+      }
+
+      setCountdown(countdown - 1);
+    }, 1000);
+
+    return () => window.clearTimeout(countdownTimer);
+  }, [countdown]);
+
+  useEffect(() => {
     if (!isScreenOn || gameMode === null) {
+      return undefined;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.code !== 'Escape') {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setIsPaused(true);
+      setCountdown(null);
+    };
+
+    window.addEventListener('keydown', handleEscape, true);
+
+    return () => window.removeEventListener('keydown', handleEscape, true);
+  }, [gameMode, isScreenOn]);
+
+  useEffect(() => {
+    if (!isScreenOn || gameMode === null || isPaused) {
       return undefined;
     }
 
@@ -58,7 +116,7 @@ export const GameConsole = () => {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameMode, isScreenOn]);
+  }, [gameMode, isPaused, isScreenOn]);
 
   return (
     <section className={style.shell} aria-label="Электронная игра Ну, погоди!">
@@ -72,7 +130,14 @@ export const GameConsole = () => {
         <div className={style.gameArea}>
           <div className={style.displayPanel}>
             <h1>НУ, ПОГОДИ!</h1>
-            <GameScreen wolfPose={wolfPose} isScreenOn={isScreenOn} />
+            <GameScreen
+              wolfPose={wolfPose}
+              isScreenOn={isScreenOn}
+              gameMode={gameMode}
+              gameSession={gameSession}
+              isPaused={isPaused}
+              countdown={countdown}
+            />
             <span>ЭЛЕКТРОНИКА</span>
           </div>
         </div>
@@ -99,11 +164,7 @@ export const GameConsole = () => {
               <i />
               <span>ИГРА Б</span>
             </button>
-            <button
-              type="button"
-              aria-label={isScreenOn ? 'Выключить экран' : 'Включить экран'}
-              onClick={toggleScreen}
-            >
+            <button type="button" aria-label={isScreenOn ? 'Выключить экран' : 'Включить экран'} onClick={toggleScreen}>
               <i />
               <span>ЭКРАН</span>
             </button>
@@ -125,14 +186,14 @@ export const GameConsole = () => {
             direction="up-left"
             label="Левая верхняя позиция"
             isActive={wolfPose === 'topLeft'}
-            disabled={!isScreenOn || gameMode === null}
+            disabled={!isScreenOn || gameMode === null || isPaused}
             onClick={() => setWolfPose('topLeft')}
           />
           <GameButton
             direction="down-left"
             label="Левая нижняя позиция"
             isActive={wolfPose === 'bottomLeft'}
-            disabled={!isScreenOn || gameMode === null}
+            disabled={!isScreenOn || gameMode === null || isPaused}
             onClick={() => setWolfPose('bottomLeft')}
           />
         </div>
@@ -141,14 +202,14 @@ export const GameConsole = () => {
             direction="up-right"
             label="Правая верхняя позиция"
             isActive={wolfPose === 'topRight'}
-            disabled={!isScreenOn || gameMode === null}
+            disabled={!isScreenOn || gameMode === null || isPaused}
             onClick={() => setWolfPose('topRight')}
           />
           <GameButton
             direction="down-right"
             label="Правая нижняя позиция"
             isActive={wolfPose === 'bottomRight'}
-            disabled={!isScreenOn || gameMode === null}
+            disabled={!isScreenOn || gameMode === null || isPaused}
             onClick={() => setWolfPose('bottomRight')}
           />
         </div>
