@@ -19,6 +19,11 @@ export type MovingEgg = Point & {
   id: number;
 };
 
+type EggMovementState = {
+  eggs: MovingEgg[];
+  speedLevel: number;
+};
+
 const eggPaths: Record<WolfPose, Point[]> = {
   topLeft: [
     { x: 150, y: 126 },
@@ -59,16 +64,22 @@ const timings: Record<EggMovementMode, { movement: number; spawn: number }> = {
   B: { movement: 220, spawn: 900 },
 };
 
+const speedFactors = [1, 1.5, 2, 2.5, 3];
+const speedUpInterval = 10_000;
 const lanes = Object.keys(eggPaths) as WolfPose[];
+
+const getDelay = (baseDelay: number, speedLevel: number) => Math.round(baseDelay / speedFactors[speedLevel - 1]);
 
 export const useEggMovement = (
   gameMode: EggMovementMode | null,
   gameSession: number,
   isPaused: boolean,
-): MovingEgg[] => {
+): EggMovementState => {
   const [eggs, setEggs] = useState<MovingEggState[]>([]);
+  const [speedLevel, setSpeedLevel] = useState(0);
   const nextId = useRef(0);
   const isPausedRef = useRef(isPaused);
+  const speedLevelRef = useRef(1);
 
   isPausedRef.current = isPaused;
 
@@ -76,10 +87,19 @@ export const useEggMovement = (
     setEggs([]);
 
     if (gameMode === null) {
+      setSpeedLevel(0);
+      speedLevelRef.current = 1;
       return undefined;
     }
 
+    setSpeedLevel(1);
+    speedLevelRef.current = 1;
+
     let previousLane: WolfPose | null = null;
+    let movementTimer: number;
+    let spawnTimer: number;
+    let activeTime = 0;
+    let previousTimestamp = window.performance.now();
     const availableGameLanes = gameMode === 'A' ? lanes.filter((lane) => lane !== 'topLeft') : lanes;
 
     const spawnEgg = () => {
@@ -97,25 +117,51 @@ export const useEggMovement = (
 
     spawnEgg();
 
-    const movementTimer = window.setInterval(() => {
-      if (isPausedRef.current) {
-        return;
+    const moveEggs = () => {
+      if (!isPausedRef.current) {
+        setEggs((currentEggs) =>
+          currentEggs
+            .map((egg) => ({ ...egg, step: egg.step + 1 }))
+            .filter((egg) => egg.step < eggPaths[egg.lane].length),
+        );
       }
 
-      setEggs((currentEggs) =>
-        currentEggs
-          .map((egg) => ({ ...egg, step: egg.step + 1 }))
-          .filter((egg) => egg.step < eggPaths[egg.lane].length),
-      );
-    }, timings[gameMode].movement);
+      movementTimer = window.setTimeout(moveEggs, getDelay(timings[gameMode].movement, speedLevelRef.current));
+    };
 
-    const spawnTimer = window.setInterval(spawnEgg, timings[gameMode].spawn);
+    const spawnNextEgg = () => {
+      spawnEgg();
+      spawnTimer = window.setTimeout(spawnNextEgg, getDelay(timings[gameMode].spawn, speedLevelRef.current));
+    };
+
+    movementTimer = window.setTimeout(moveEggs, timings[gameMode].movement);
+    spawnTimer = window.setTimeout(spawnNextEgg, timings[gameMode].spawn);
+
+    const accelerationTimer = window.setInterval(() => {
+      const currentTimestamp = window.performance.now();
+
+      if (!isPausedRef.current && speedLevelRef.current < speedFactors.length) {
+        activeTime += currentTimestamp - previousTimestamp;
+
+        if (activeTime >= speedUpInterval) {
+          activeTime -= speedUpInterval;
+          speedLevelRef.current += 1;
+          setSpeedLevel(speedLevelRef.current);
+        }
+      }
+
+      previousTimestamp = currentTimestamp;
+    }, 250);
 
     return () => {
-      window.clearInterval(movementTimer);
-      window.clearInterval(spawnTimer);
+      window.clearTimeout(movementTimer);
+      window.clearTimeout(spawnTimer);
+      window.clearInterval(accelerationTimer);
     };
   }, [gameMode, gameSession]);
 
-  return eggs.map(({ id, lane, step }) => ({ id, ...eggPaths[lane][step] }));
+  return {
+    eggs: eggs.map(({ id, lane, step }) => ({ id, ...eggPaths[lane][step] })),
+    speedLevel,
+  };
 };

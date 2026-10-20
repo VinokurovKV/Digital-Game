@@ -22,6 +22,24 @@ const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
   bottomRight: { x: 491, y: 215 },
 };
 
+const speedSteps = [8, 12, 16, 20, 24];
+
+const SpeedScale = ({ level }: { level: number }) => (
+  <g transform="translate(625 49)" aria-hidden="true">
+    {speedSteps.map((height, index) => (
+      <rect
+        key={height}
+        className={index < level ? style.speedStepActive : style.speedStep}
+        x={index * 12}
+        y={-height}
+        width="8"
+        height={height}
+        rx="1"
+      />
+    ))}
+  </g>
+);
+
 const Ramp = ({
   x,
   y,
@@ -42,7 +60,7 @@ const Ramp = ({
 
 export const GameScreen = ({ wolfPose, isScreenOn, gameMode, gameSession, isPaused, countdown }: GameScreenProps) => {
   const wolfPosition = wolfPose ? wolfPositions[wolfPose] : { x: 390, y: 145 };
-  const movingEggs = useEggMovement(gameMode, gameSession, isPaused);
+  const { eggs: movingEggs, speedLevel } = useEggMovement(gameMode, gameSession, isPaused);
 
   return (
     <div className={style.frame}>
@@ -74,10 +92,11 @@ export const GameScreen = ({ wolfPose, isScreenOn, gameMode, gameSession, isPaus
           </g>
         ) : (
           <g filter="url(#soft-lcd)">
+            <SpeedScale level={speedLevel} />
             <text className={style.score} x="400" y="55" textAnchor="middle">
-              0230
+              0000
             </text>
-            <g className={style.misses} transform="translate(503 27)">
+            <g className={style.misses} transform="translate(503 38)">
               <circle cx="0" cy="0" r="10" />
               <circle cx="30" cy="0" r="10" />
               <circle cx="60" cy="0" r="10" />
