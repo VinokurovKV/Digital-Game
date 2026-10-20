@@ -16,6 +16,26 @@ const movementKeys: Record<string, WolfPose> = {
   KeyL: 'bottomRight',
 };
 
+const recordStorageKey = 'nu-pogodi-record';
+
+const loadRecord = (): number => {
+  try {
+    const storedRecord = Number(window.localStorage.getItem(recordStorageKey));
+
+    return storedRecord > 0 ? Math.min(Math.floor(storedRecord), 9999) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const saveRecord = (record: number) => {
+  try {
+    window.localStorage.setItem(recordStorageKey, String(record));
+  } catch {
+    return;
+  }
+};
+
 export const GameConsole = () => {
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const [wolfPose, setWolfPose] = useState<WolfPose | null>(null);
@@ -23,9 +43,13 @@ export const GameConsole = () => {
   const [gameSession, setGameSession] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const [record, setRecord] = useState(loadRecord);
+  const [misses, setMisses] = useState(0);
+  const [isGameOver, setIsGameOver] = useState(false);
 
   const startGame = (mode: GameMode) => {
-    if (gameMode === mode) {
+    if (gameMode === mode && !isGameOver) {
       if (isPaused) {
         setCountdown((currentCountdown) => (currentCountdown === null ? 3 : null));
       } else {
@@ -40,6 +64,9 @@ export const GameConsole = () => {
     setWolfPose(null);
     setIsPaused(false);
     setCountdown(null);
+    setScore(0);
+    setMisses(0);
+    setIsGameOver(false);
     setGameSession((session) => session + 1);
   };
 
@@ -49,10 +76,27 @@ export const GameConsole = () => {
       setWolfPose(null);
       setIsPaused(false);
       setCountdown(null);
+      setScore(0);
+      setMisses(0);
+      setIsGameOver(false);
     }
 
     setIsScreenOn(!isScreenOn);
   };
+
+  useEffect(() => {
+    if (misses < 5 || isGameOver) {
+      return;
+    }
+
+    setIsPaused(false);
+    setCountdown(null);
+    setIsGameOver(true);
+
+    const nextRecord = Math.max(record, score);
+    setRecord(nextRecord);
+    saveRecord(nextRecord);
+  }, [isGameOver, misses, record, score]);
 
   useEffect(() => {
     if (countdown === null) {
@@ -73,7 +117,7 @@ export const GameConsole = () => {
   }, [countdown]);
 
   useEffect(() => {
-    if (!isScreenOn || gameMode === null) {
+    if (!isScreenOn || gameMode === null || isGameOver) {
       return undefined;
     }
 
@@ -91,10 +135,10 @@ export const GameConsole = () => {
     window.addEventListener('keydown', handleEscape, true);
 
     return () => window.removeEventListener('keydown', handleEscape, true);
-  }, [gameMode, isScreenOn]);
+  }, [gameMode, isGameOver, isScreenOn]);
 
   useEffect(() => {
-    if (!isScreenOn || gameMode === null || isPaused) {
+    if (!isScreenOn || gameMode === null || isPaused || isGameOver) {
       return undefined;
     }
 
@@ -116,7 +160,7 @@ export const GameConsole = () => {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameMode, isPaused, isScreenOn]);
+  }, [gameMode, isGameOver, isPaused, isScreenOn]);
 
   return (
     <section className={style.shell} aria-label="Электронная игра Ну, погоди!">
@@ -137,6 +181,12 @@ export const GameConsole = () => {
               gameSession={gameSession}
               isPaused={isPaused}
               countdown={countdown}
+              score={score}
+              record={record}
+              misses={misses}
+              isGameOver={isGameOver}
+              onEggCaught={(caughtEggs) => setScore((currentScore) => Math.min(currentScore + caughtEggs, 9999))}
+              onEggMissed={(missedEggs) => setMisses((currentMisses) => Math.min(currentMisses + missedEggs, 5))}
             />
             <span>ЭЛЕКТРОНИКА</span>
           </div>
@@ -186,14 +236,14 @@ export const GameConsole = () => {
             direction="up-left"
             label="Левая верхняя позиция"
             isActive={wolfPose === 'topLeft'}
-            disabled={!isScreenOn || gameMode === null || isPaused}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
             onClick={() => setWolfPose('topLeft')}
           />
           <GameButton
             direction="down-left"
             label="Левая нижняя позиция"
             isActive={wolfPose === 'bottomLeft'}
-            disabled={!isScreenOn || gameMode === null || isPaused}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
             onClick={() => setWolfPose('bottomLeft')}
           />
         </div>
@@ -202,14 +252,14 @@ export const GameConsole = () => {
             direction="up-right"
             label="Правая верхняя позиция"
             isActive={wolfPose === 'topRight'}
-            disabled={!isScreenOn || gameMode === null || isPaused}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
             onClick={() => setWolfPose('topRight')}
           />
           <GameButton
             direction="down-right"
             label="Правая нижняя позиция"
             isActive={wolfPose === 'bottomRight'}
-            disabled={!isScreenOn || gameMode === null || isPaused}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
             onClick={() => setWolfPose('bottomRight')}
           />
         </div>

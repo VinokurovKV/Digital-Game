@@ -1,7 +1,7 @@
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
 
 import style from './GameScreen.module.less';
-import { Chicken, Egg, Rabbit, Wolf } from '../GameSprites';
+import { BrokenEgg, Chicken, Egg, Rabbit, Wolf } from '../GameSprites';
 import type { WolfPose } from '../GameSprites';
 import { useEggMovement } from './useEggMovement';
 import type { EggMovementMode } from './useEggMovement';
@@ -13,6 +13,12 @@ type GameScreenProps = {
   gameSession: number;
   isPaused: boolean;
   countdown: number | null;
+  score: number;
+  record: number;
+  misses: number;
+  isGameOver: boolean;
+  onEggCaught: (caughtEggs: number) => void;
+  onEggMissed: (missedEggs: number) => void;
 };
 
 const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
@@ -23,6 +29,8 @@ const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
 };
 
 const speedSteps = [8, 12, 16, 20, 24];
+const missSteps = [0, 1, 2, 3, 4];
+const formatScore = (value: number) => `0000${value}`.slice(-4);
 
 const SpeedScale = ({ level }: { level: number }) => (
   <g transform="translate(625 49)" aria-hidden="true">
@@ -58,9 +66,28 @@ const Ramp = ({
   </g>
 );
 
-export const GameScreen = ({ wolfPose, isScreenOn, gameMode, gameSession, isPaused, countdown }: GameScreenProps) => {
+export const GameScreen = ({
+  wolfPose,
+  isScreenOn,
+  gameMode,
+  gameSession,
+  isPaused,
+  countdown,
+  score,
+  record,
+  misses,
+  isGameOver,
+  onEggCaught,
+  onEggMissed,
+}: GameScreenProps) => {
   const wolfPosition = wolfPose ? wolfPositions[wolfPose] : { x: 390, y: 145 };
-  const { eggs: movingEggs, speedLevel } = useEggMovement(gameMode, gameSession, isPaused);
+  const formattedScore = formatScore(score);
+  const formattedRecord = formatScore(record);
+  const {
+    eggs: movingEggs,
+    brokenEggs,
+    speedLevel,
+  } = useEggMovement(gameMode, gameSession, isPaused || isGameOver, wolfPose, onEggCaught, onEggMissed);
 
   return (
     <div className={style.frame}>
@@ -93,14 +120,25 @@ export const GameScreen = ({ wolfPose, isScreenOn, gameMode, gameSession, isPaus
         ) : (
           <g filter="url(#soft-lcd)">
             <SpeedScale level={speedLevel} />
+            <text className={style.recordLabel} x="245" y="16" textAnchor="middle">
+              РЕКОРД
+            </text>
+            <text className={style.score} x="245" y="55" textAnchor="middle">
+              {formattedRecord}
+            </text>
             <text className={style.score} x="400" y="55" textAnchor="middle">
-              0000
+              {formattedScore}
             </text>
             <g className={style.misses} transform="translate(503 38)">
-              <circle cx="0" cy="0" r="10" />
-              <circle cx="30" cy="0" r="10" />
-              <circle cx="60" cy="0" r="10" />
-              <circle cx="90" cy="0" r="9" fill="none" stroke="currentColor" strokeWidth="3" />
+              {missSteps.map((missStep) => (
+                <circle
+                  key={missStep}
+                  className={missStep < misses ? style.missActive : style.miss}
+                  cx={missStep * 24}
+                  cy="0"
+                  r="9"
+                />
+              ))}
             </g>
 
             <Rabbit x={110} y={17} scale={0.52} />
@@ -117,6 +155,10 @@ export const GameScreen = ({ wolfPose, isScreenOn, gameMode, gameSession, isPaus
               <Egg key={egg.id} x={egg.x} y={egg.y} />
             ))}
 
+            {brokenEggs.map((egg) => (
+              <BrokenEgg key={egg.id} x={egg.x} y={egg.y} />
+            ))}
+
             <Wolf x={wolfPosition.x} y={wolfPosition.y} scale={0.98} pose={wolfPose} />
 
             <path
@@ -126,16 +168,24 @@ export const GameScreen = ({ wolfPose, isScreenOn, gameMode, gameSession, isPaus
           </g>
         )}
       </svg>
-      {isScreenOn && isPaused && (
-        <div className={style.pauseOverlay} role="status" aria-live="polite">
-          {countdown === null ? (
+      {isScreenOn && (isPaused || isGameOver) && (
+        <div className={`${style.pauseOverlay} ${isGameOver ? style.gameOver : ''}`} role="status" aria-live="polite">
+          {isGameOver ? (
+            <span>
+              Игра окончена
+              <br />
+              Ваш счёт: {formattedScore}
+            </span>
+          ) : countdown === null ? (
             <PauseRoundedIcon aria-hidden="true" />
           ) : (
             <span className={style.countdown}>{countdown}</span>
           )}
-          <span className={style.visuallyHidden}>
-            {countdown === null ? 'Игра на паузе' : `Игра продолжится через ${countdown}`}
-          </span>
+          {!isGameOver && (
+            <span className={style.visuallyHidden}>
+              {countdown === null ? 'Игра на паузе' : `Игра продолжится через ${countdown}`}
+            </span>
+          )}
         </div>
       )}
     </div>

@@ -33,6 +33,15 @@
   text-shadow: 0 3px 3px rgba(28, 32, 26, 0.3);
 }
 
+.gameOver {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(22px, 4.2vw, 64px);
+  font-weight: 900;
+  line-height: 1.25;
+  text-shadow: 0 3px 3px rgba(28, 32, 26, 0.3);
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
@@ -71,15 +80,33 @@
   letter-spacing: 7px;
 }
 
+.recordLabel {
+  fill: currentColor;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
 .misses {
+  stroke: currentColor;
+  stroke-width: 3;
+}
+
+.miss {
+  fill: none;
+  opacity: 0.62;
+}
+
+.missActive {
   fill: currentColor;
 }
 
 .speedStep {
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
-  opacity: 0.38;
+  stroke-width: 3;
+  opacity: 0.62;
 }
 
 .speedStepActive {

@@ -16,3 +16,75 @@
 .lcdCutout {
   fill: #aeb49a;
 }
+
+.brokenEgg {
+  animation: broken-egg-fade 700ms ease-out forwards;
+}
+
+.leftShell,
+.rightShell,
+.eggSplash {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.leftShell {
+  animation: shell-left 700ms ease-out forwards;
+}
+
+.rightShell {
+  animation: shell-right 700ms ease-out forwards;
+}
+
+.eggSplash {
+  animation: egg-splash 700ms ease-out forwards;
+}
+
+@keyframes shell-left {
+  100% {
+    transform: translate(-10px, 5px) rotate(-18deg);
+  }
+}
+
+@keyframes shell-right {
+  100% {
+    transform: translate(10px, 5px) rotate(18deg);
+  }
+}
+
+@keyframes egg-splash {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-13px) scale(1.12);
+  }
+}
+
+@keyframes broken-egg-fade {
+  0%,
+  72% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brokenEgg,
+  .leftShell,
+  .rightShell,
+  .eggSplash {
+    animation: none;
+  }
+}
