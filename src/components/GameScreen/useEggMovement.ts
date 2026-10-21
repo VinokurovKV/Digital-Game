@@ -36,6 +36,16 @@ type EggMovementState = {
   speedLevel: number;
 };
 
+type UseEggMovementOptions = {
+  gameMode: EggMovementMode | null;
+  gameSession: number;
+  isPaused: boolean;
+  wolfPose: WolfPose | null;
+  onEggCaught: (caughtEggs: number) => void;
+  onEggMissed: (missedEggs: number) => void;
+  onClockLaneChange: (lane: WolfPose) => void;
+};
+
 const eggPaths: Record<WolfPose, Point[]> = {
   topLeft: [
     { x: 150, y: 126 },
@@ -82,15 +92,15 @@ const clockLanes: WolfPose[] = ['topRight', 'bottomRight', 'bottomLeft', 'topLef
 const speedUpInterval = 10_000;
 const brokenEggDuration = 700;
 
-export const useEggMovement = (
-  gameMode: EggMovementMode | null,
-  gameSession: number,
-  isPaused: boolean,
-  wolfPose: WolfPose | null,
-  onEggCaught: (caughtEggs: number) => void,
-  onEggMissed: (missedEggs: number) => void,
-  onClockLaneChange: (lane: WolfPose) => void,
-): EggMovementState => {
+export const useEggMovement = ({
+  gameMode,
+  gameSession,
+  isPaused,
+  wolfPose,
+  onEggCaught,
+  onEggMissed,
+  onClockLaneChange,
+}: UseEggMovementOptions): EggMovementState => {
   const [eggs, setEggs] = useState<MovingEggState[]>([]);
   const [brokenEggs, setBrokenEggs] = useState<BrokenEggState[]>([]);
   const [speedLevel, setSpeedLevel] = useState(0);
@@ -125,8 +135,8 @@ export const useEggMovement = (
 
     let previousLane: WolfPose | null = null;
     let clockLaneIndex = 0;
-    let movementTimer: number;
-    let spawnTimer: number;
+    let movementTimer = 0;
+    let spawnTimer = 0;
     const brokenEggTimers: number[] = [];
     let activeTime = 0;
     let previousTimestamp = window.performance.now();

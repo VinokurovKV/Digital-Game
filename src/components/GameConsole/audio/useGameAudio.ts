@@ -42,7 +42,7 @@ export const useGameAudio = () => {
       audio.currentTime = 0;
     }
 
-    void audio.play().catch((error: unknown) => {
+    audio.play().catch((error: unknown) => {
       console.warn(`Не удалось воспроизвести звук «${sound}»`, error);
     });
   }, []);

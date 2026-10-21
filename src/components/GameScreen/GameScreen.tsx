@@ -1,10 +1,12 @@
 import { memo, useEffect, useState } from 'react';
+
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
 
-import style from './GameScreen.module.less';
 import { formatScore } from '../../game/gameRules';
 import { BrokenEgg, Chicken, Egg, Rabbit, Wolf } from '../GameSprites';
 import type { WolfPose } from '../GameSprites';
+
+import style from './GameScreen.module.less';
 import { useEggMovement } from './useEggMovement';
 import type { EggMovementMode } from './useEggMovement';
 
@@ -123,6 +125,30 @@ const ClockHud = ({ time }: { time: Date }) => (
   </text>
 );
 
+type GameStatusProps = {
+  countdown: number | null;
+  formattedScore: string;
+  isGameOver: boolean;
+};
+
+const GameStatus = ({ countdown, formattedScore, isGameOver }: GameStatusProps) => {
+  if (isGameOver) {
+    return (
+      <span>
+        Игра окончена
+        <br />
+        Ваш счёт: {formattedScore}
+      </span>
+    );
+  }
+
+  if (countdown !== null) {
+    return <span className={style.countdown}>{countdown}</span>;
+  }
+
+  return <PauseRoundedIcon aria-hidden="true" />;
+};
+
 export const GameScreen = ({
   wolfPose,
   isScreenOn,
@@ -147,15 +173,15 @@ export const GameScreen = ({
     eggs: movingEggs,
     brokenEggs,
     speedLevel,
-  } = useEggMovement(
-    isClockMode ? 'clock' : gameMode,
+  } = useEggMovement({
+    gameMode: isClockMode ? 'clock' : gameMode,
     gameSession,
-    isPaused || isGameOver,
+    isPaused: isPaused || isGameOver,
     wolfPose,
     onEggCaught,
     onEggMissed,
     onClockLaneChange,
-  );
+  });
 
   useEffect(() => {
     if (!isClockMode || !isScreenOn) {
@@ -226,17 +252,7 @@ export const GameScreen = ({
       </svg>
       {isScreenOn && (isPaused || isGameOver) && (
         <div className={`${style.pauseOverlay} ${isGameOver ? style.gameOver : ''}`} role="status" aria-live="polite">
-          {isGameOver ? (
-            <span>
-              Игра окончена
-              <br />
-              Ваш счёт: {formattedScore}
-            </span>
-          ) : countdown === null ? (
-            <PauseRoundedIcon aria-hidden="true" />
-          ) : (
-            <span className={style.countdown}>{countdown}</span>
-          )}
+          <GameStatus countdown={countdown} formattedScore={formattedScore} isGameOver={isGameOver} />
           {!isGameOver && (
             <span className={style.visuallyHidden}>
               {countdown === null ? 'Игра на паузе' : `Игра продолжится через ${countdown}`}

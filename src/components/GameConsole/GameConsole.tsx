@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
@@ -8,8 +9,9 @@ import type { GameMode } from '../../game/gameRules';
 import { GameButton } from '../GameButton';
 import { GameScreen } from '../GameScreen';
 import type { WolfPose } from '../GameSprites';
-import style from './GameConsole.module.less';
+
 import { useGameAudio } from './audio/useGameAudio';
+import style from './GameConsole.module.less';
 
 const movementKeys: Record<string, WolfPose> = {
   KeyQ: 'topLeft',
@@ -33,9 +35,7 @@ const loadRecord = (): number => {
 const saveRecord = (record: number) => {
   try {
     window.localStorage.setItem(recordStorageKey, String(record));
-  } catch {
-    return;
-  }
+  } catch {}
 };
 
 export const GameConsole = () => {
@@ -292,7 +292,7 @@ export const GameConsole = () => {
 
         <div className={style.leftControls}>
           <GameButton
-            direction="up-left"
+            direction="upLeft"
             label="Левая верхняя позиция"
             isActive={wolfPose === 'topLeft'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
@@ -302,7 +302,7 @@ export const GameConsole = () => {
             }}
           />
           <GameButton
-            direction="down-left"
+            direction="downLeft"
             label="Левая нижняя позиция"
             isActive={wolfPose === 'bottomLeft'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
@@ -314,7 +314,7 @@ export const GameConsole = () => {
         </div>
         <div className={style.rightControls}>
           <GameButton
-            direction="up-right"
+            direction="upRight"
             label="Правая верхняя позиция"
             isActive={wolfPose === 'topRight'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
@@ -324,7 +324,7 @@ export const GameConsole = () => {
             }}
           />
           <GameButton
-            direction="down-right"
+            direction="downRight"
             label="Правая нижняя позиция"
             isActive={wolfPose === 'bottomRight'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}

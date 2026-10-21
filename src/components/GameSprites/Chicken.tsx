@@ -1,5 +1,5 @@
 import style from './GameSprites.module.less';
-import { SpritePositionProps } from './types';
+import type { SpritePositionProps } from './types';
 
 export const Chicken = ({ x, y, scale = 1, mirrored = false }: SpritePositionProps) => {
   const spriteSize = 64;

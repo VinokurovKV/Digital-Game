@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
 import style from './GameSprites.module.less';
-import { SpritePositionProps } from './types';
+import type { SpritePositionProps } from './types';
 
 export type WolfPose = 'topLeft' | 'bottomLeft' | 'topRight' | 'bottomRight';
 

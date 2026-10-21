@@ -1,8 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import style from './App.module.less';
 import { GameConsole } from '../GameConsole';
 import { WelcomeScreen } from '../WelcomeScreen';
+
+import style from './App.module.less';
 
 export const App = () => (
   <Routes>
