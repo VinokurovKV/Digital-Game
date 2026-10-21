@@ -3,13 +3,13 @@ import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 
+import { addMisses, addScore, clampScore, getNextRecord, hasGameEnded } from '../../game/gameRules';
+import type { GameMode } from '../../game/gameRules';
 import { GameButton } from '../GameButton';
 import { GameScreen } from '../GameScreen';
 import type { WolfPose } from '../GameSprites';
 import style from './GameConsole.module.less';
 import { useGameAudio } from './audio/useGameAudio';
-
-type GameMode = 'A' | 'B';
 
 const movementKeys: Record<string, WolfPose> = {
   KeyQ: 'topLeft',
@@ -24,7 +24,7 @@ const loadRecord = (): number => {
   try {
     const storedRecord = Number(window.localStorage.getItem(recordStorageKey));
 
-    return storedRecord > 0 ? Math.min(Math.floor(storedRecord), 9999) : 0;
+    return storedRecord > 0 ? clampScore(storedRecord) : 0;
   } catch {
     return 0;
   }
@@ -93,7 +93,7 @@ export const GameConsole = () => {
   };
 
   useEffect(() => {
-    if (misses < 5 || isGameOver) {
+    if (!hasGameEnded(misses) || isGameOver) {
       return;
     }
 
@@ -101,7 +101,7 @@ export const GameConsole = () => {
     setCountdown(null);
     setIsGameOver(true);
 
-    const nextRecord = Math.max(record, score);
+    const nextRecord = getNextRecord(record, score);
     setRecord(nextRecord);
     saveRecord(nextRecord);
     playSound('gameOver');
@@ -198,11 +198,11 @@ export const GameConsole = () => {
               isGameOver={isGameOver}
               onEggCaught={(caughtEggs) => {
                 playSound('catch');
-                setScore((currentScore) => Math.min(currentScore + caughtEggs, 9999));
+                setScore((currentScore) => addScore(currentScore, caughtEggs));
               }}
               onEggMissed={(missedEggs) => {
                 playSound('miss');
-                setMisses((currentMisses) => Math.min(currentMisses + missedEggs, 5));
+                setMisses((currentMisses) => addMisses(currentMisses, missedEggs));
               }}
             />
             <span>ЭЛЕКТРОНИКА</span>

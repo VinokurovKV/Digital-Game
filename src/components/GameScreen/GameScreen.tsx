@@ -2,6 +2,7 @@ import { memo } from 'react';
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
 
 import style from './GameScreen.module.less';
+import { formatScore } from '../../game/gameRules';
 import { BrokenEgg, Chicken, Egg, Rabbit, Wolf } from '../GameSprites';
 import type { WolfPose } from '../GameSprites';
 import { useEggMovement } from './useEggMovement';
@@ -32,8 +33,6 @@ const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
 const speedSteps = [8, 12, 16, 20, 24];
 const missSteps = [0, 1, 2, 3, 4];
 const groundTilePositions = [0, 166, 332, 498, 664];
-const formatScore = (value: number) => `0000${value}`.slice(-4);
-
 const SpeedScale = ({ level }: { level: number }) => (
   <g transform="translate(625 49)" aria-hidden="true">
     {speedSteps.map((height, index) => (

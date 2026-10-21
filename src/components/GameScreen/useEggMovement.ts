@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { getGameDelay, maxSpeedLevel, selectNextLane } from '../../game/gameRules';
+import type { GameMode } from '../../game/gameRules';
 import type { WolfPose } from '../GameSprites';
 
-export type EggMovementMode = 'A' | 'B';
+export type EggMovementMode = GameMode;
 
 type Point = {
   x: number;
@@ -74,12 +76,8 @@ const timings: Record<EggMovementMode, { movement: number; spawn: number }> = {
   B: { movement: 220, spawn: 900 },
 };
 
-const speedFactors = [1, 1.4, 1.8, 2.2, 2.6, 3];
 const speedUpInterval = 10_000;
 const brokenEggDuration = 700;
-const lanes = Object.keys(eggPaths) as WolfPose[];
-
-const getDelay = (baseDelay: number, speedLevel: number) => Math.round(baseDelay / speedFactors[speedLevel]);
 
 export const useEggMovement = (
   gameMode: EggMovementMode | null,
@@ -125,15 +123,12 @@ export const useEggMovement = (
     const brokenEggTimers: number[] = [];
     let activeTime = 0;
     let previousTimestamp = window.performance.now();
-    const availableGameLanes = gameMode === 'A' ? lanes.filter((lane) => lane !== 'topLeft') : lanes;
-
     const spawnEgg = () => {
       if (isPausedRef.current) {
         return;
       }
 
-      const availableLanes = availableGameLanes.filter((lane) => lane !== previousLane);
-      const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+      const lane = selectNextLane(gameMode, previousLane, Math.random());
 
       previousLane = lane;
       nextId.current += 1;
@@ -145,7 +140,7 @@ export const useEggMovement = (
 
     const spawnNextEgg = () => {
       spawnEgg();
-      spawnTimer = window.setTimeout(spawnNextEgg, getDelay(timings[gameMode].spawn, speedLevelRef.current));
+      spawnTimer = window.setTimeout(spawnNextEgg, getGameDelay(timings[gameMode].spawn, speedLevelRef.current));
     };
 
     const resetSpeed = () => {
@@ -206,7 +201,7 @@ export const useEggMovement = (
         }
       }
 
-      movementTimer = window.setTimeout(moveEggs, getDelay(timings[gameMode].movement, speedLevelRef.current));
+      movementTimer = window.setTimeout(moveEggs, getGameDelay(timings[gameMode].movement, speedLevelRef.current));
     };
 
     movementTimer = window.setTimeout(moveEggs, timings[gameMode].movement);
@@ -215,7 +210,7 @@ export const useEggMovement = (
     const accelerationTimer = window.setInterval(() => {
       const currentTimestamp = window.performance.now();
 
-      if (!isPausedRef.current && speedLevelRef.current < speedFactors.length - 1) {
+      if (!isPausedRef.current && speedLevelRef.current < maxSpeedLevel) {
         activeTime += currentTimestamp - previousTimestamp;
 
         if (activeTime >= speedUpInterval) {
