@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
+import VolumeOffRoundedIcon from '@mui/icons-material/VolumeOffRounded';
 import VolumeUpRoundedIcon from '@mui/icons-material/VolumeUpRounded';
 
 import { GameButton } from '../GameButton';
 import { GameScreen } from '../GameScreen';
 import type { WolfPose } from '../GameSprites';
 import style from './GameConsole.module.less';
+import { useGameAudio } from './audio/useGameAudio';
 
 type GameMode = 'A' | 'B';
 
@@ -47,12 +49,15 @@ export const GameConsole = () => {
   const [record, setRecord] = useState(loadRecord);
   const [misses, setMisses] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
+  const { isSoundEnabled, playSound, toggleSound } = useGameAudio();
 
   const startGame = (mode: GameMode) => {
     if (gameMode === mode && !isGameOver) {
       if (isPaused) {
+        playSound(countdown === null ? 'start' : 'pause');
         setCountdown((currentCountdown) => (currentCountdown === null ? 3 : null));
       } else {
+        playSound('pause');
         setIsPaused(true);
         setCountdown(null);
       }
@@ -60,6 +65,7 @@ export const GameConsole = () => {
       return;
     }
 
+    playSound('start');
     setGameMode(mode);
     setWolfPose(null);
     setIsPaused(false);
@@ -71,6 +77,8 @@ export const GameConsole = () => {
   };
 
   const toggleScreen = () => {
+    playSound('screen');
+
     if (isScreenOn) {
       setGameMode(null);
       setWolfPose(null);
@@ -96,7 +104,8 @@ export const GameConsole = () => {
     const nextRecord = Math.max(record, score);
     setRecord(nextRecord);
     saveRecord(nextRecord);
-  }, [isGameOver, misses, record, score]);
+    playSound('gameOver');
+  }, [isGameOver, misses, playSound, record, score]);
 
   useEffect(() => {
     if (countdown === null) {
@@ -128,6 +137,7 @@ export const GameConsole = () => {
 
       event.preventDefault();
       event.stopPropagation();
+      playSound('pause');
       setIsPaused(true);
       setCountdown(null);
     };
@@ -135,7 +145,7 @@ export const GameConsole = () => {
     window.addEventListener('keydown', handleEscape, true);
 
     return () => window.removeEventListener('keydown', handleEscape, true);
-  }, [gameMode, isGameOver, isScreenOn]);
+  }, [gameMode, isGameOver, isScreenOn, playSound]);
 
   useEffect(() => {
     if (!isScreenOn || gameMode === null || isPaused || isGameOver) {
@@ -154,13 +164,14 @@ export const GameConsole = () => {
       }
 
       event.preventDefault();
+      playSound('move');
       setWolfPose(nextPose);
     };
 
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameMode, isGameOver, isPaused, isScreenOn]);
+  }, [gameMode, isGameOver, isPaused, isScreenOn, playSound]);
 
   return (
     <section className={style.shell} aria-label="Электронная игра Ну, погоди!">
@@ -185,8 +196,14 @@ export const GameConsole = () => {
               record={record}
               misses={misses}
               isGameOver={isGameOver}
-              onEggCaught={(caughtEggs) => setScore((currentScore) => Math.min(currentScore + caughtEggs, 9999))}
-              onEggMissed={(missedEggs) => setMisses((currentMisses) => Math.min(currentMisses + missedEggs, 5))}
+              onEggCaught={(caughtEggs) => {
+                playSound('catch');
+                setScore((currentScore) => Math.min(currentScore + caughtEggs, 9999));
+              }}
+              onEggMissed={(missedEggs) => {
+                playSound('miss');
+                setMisses((currentMisses) => Math.min(currentMisses + missedEggs, 5));
+              }}
             />
             <span>ЭЛЕКТРОНИКА</span>
           </div>
@@ -220,8 +237,18 @@ export const GameConsole = () => {
             </button>
           </div>
           <div className={style.toggles}>
-            <button type="button" aria-label="Звук">
-              <VolumeUpRoundedIcon className={style.toggleIcon} />
+            <button
+              className={isSoundEnabled ? '' : style.inactiveToggle}
+              type="button"
+              aria-label={isSoundEnabled ? 'Выключить звук' : 'Включить звук'}
+              aria-pressed={isSoundEnabled}
+              onClick={toggleSound}
+            >
+              {isSoundEnabled ? (
+                <VolumeUpRoundedIcon className={style.toggleIcon} />
+              ) : (
+                <VolumeOffRoundedIcon className={style.toggleIcon} />
+              )}
               <i />
             </button>
             <button type="button" aria-label="Часы">
@@ -237,14 +264,20 @@ export const GameConsole = () => {
             label="Левая верхняя позиция"
             isActive={wolfPose === 'topLeft'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
-            onClick={() => setWolfPose('topLeft')}
+            onClick={() => {
+              playSound('move');
+              setWolfPose('topLeft');
+            }}
           />
           <GameButton
             direction="down-left"
             label="Левая нижняя позиция"
             isActive={wolfPose === 'bottomLeft'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
-            onClick={() => setWolfPose('bottomLeft')}
+            onClick={() => {
+              playSound('move');
+              setWolfPose('bottomLeft');
+            }}
           />
         </div>
         <div className={style.rightControls}>
@@ -253,14 +286,20 @@ export const GameConsole = () => {
             label="Правая верхняя позиция"
             isActive={wolfPose === 'topRight'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
-            onClick={() => setWolfPose('topRight')}
+            onClick={() => {
+              playSound('move');
+              setWolfPose('topRight');
+            }}
           />
           <GameButton
             direction="down-right"
             label="Правая нижняя позиция"
             isActive={wolfPose === 'bottomRight'}
             disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
-            onClick={() => setWolfPose('bottomRight')}
+            onClick={() => {
+              playSound('move');
+              setWolfPose('bottomRight');
+            }}
           />
         </div>
       </div>
