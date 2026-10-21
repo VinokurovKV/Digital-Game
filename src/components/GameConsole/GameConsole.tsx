@@ -49,6 +49,7 @@ export const GameConsole = () => {
   const [record, setRecord] = useState(loadRecord);
   const [misses, setMisses] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [isClockMode, setIsClockMode] = useState(false);
   const { isSoundEnabled, playSound, toggleSound } = useGameAudio();
 
   const startGame = (mode: GameMode) => {
@@ -66,8 +67,29 @@ export const GameConsole = () => {
     }
 
     playSound('start');
+    setIsClockMode(false);
     setGameMode(mode);
     setWolfPose(null);
+    setIsPaused(false);
+    setCountdown(null);
+    setScore(0);
+    setMisses(0);
+    setIsGameOver(false);
+    setGameSession((session) => session + 1);
+  };
+
+  const toggleClockMode = () => {
+    playSound('screen');
+
+    if (isClockMode) {
+      setIsClockMode(false);
+      setWolfPose(null);
+      return;
+    }
+
+    setIsClockMode(true);
+    setGameMode(null);
+    setWolfPose('topRight');
     setIsPaused(false);
     setCountdown(null);
     setScore(0);
@@ -80,6 +102,7 @@ export const GameConsole = () => {
     playSound('screen');
 
     if (isScreenOn) {
+      setIsClockMode(false);
       setGameMode(null);
       setWolfPose(null);
       setIsPaused(false);
@@ -196,6 +219,8 @@ export const GameConsole = () => {
               record={record}
               misses={misses}
               isGameOver={isGameOver}
+              isClockMode={isClockMode}
+              onClockLaneChange={setWolfPose}
               onEggCaught={(caughtEggs) => {
                 playSound('catch');
                 setScore((currentScore) => addScore(currentScore, caughtEggs));
@@ -251,7 +276,14 @@ export const GameConsole = () => {
               )}
               <i />
             </button>
-            <button type="button" aria-label="Часы">
+            <button
+              className={isClockMode ? style.activeToggle : ''}
+              type="button"
+              aria-label={isClockMode ? 'Выключить режим часов' : 'Включить режим часов'}
+              aria-pressed={isClockMode}
+              disabled={!isScreenOn}
+              onClick={toggleClockMode}
+            >
               <AccessTimeRoundedIcon className={style.toggleIcon} />
               <i />
             </button>

@@ -4,7 +4,7 @@ import { getGameDelay, maxSpeedLevel, selectNextLane } from '../../game/gameRule
 import type { GameMode } from '../../game/gameRules';
 import type { WolfPose } from '../GameSprites';
 
-export type EggMovementMode = GameMode;
+export type EggMovementMode = GameMode | 'clock';
 
 type Point = {
   x: number;
@@ -74,7 +74,10 @@ const eggPaths: Record<WolfPose, Point[]> = {
 const timings: Record<EggMovementMode, { movement: number; spawn: number }> = {
   A: { movement: 320, spawn: 1400 },
   B: { movement: 220, spawn: 900 },
+  clock: { movement: 150, spawn: 1000 },
 };
+
+const clockLanes: WolfPose[] = ['topRight', 'bottomRight', 'bottomLeft', 'topLeft'];
 
 const speedUpInterval = 10_000;
 const brokenEggDuration = 700;
@@ -86,6 +89,7 @@ export const useEggMovement = (
   wolfPose: WolfPose | null,
   onEggCaught: (caughtEggs: number) => void,
   onEggMissed: (missedEggs: number) => void,
+  onClockLaneChange: (lane: WolfPose) => void,
 ): EggMovementState => {
   const [eggs, setEggs] = useState<MovingEggState[]>([]);
   const [brokenEggs, setBrokenEggs] = useState<BrokenEggState[]>([]);
@@ -97,11 +101,13 @@ export const useEggMovement = (
   const wolfPoseRef = useRef(wolfPose);
   const onEggCaughtRef = useRef(onEggCaught);
   const onEggMissedRef = useRef(onEggMissed);
+  const onClockLaneChangeRef = useRef(onClockLaneChange);
 
   isPausedRef.current = isPaused;
   wolfPoseRef.current = wolfPose;
   onEggCaughtRef.current = onEggCaught;
   onEggMissedRef.current = onEggMissed;
+  onClockLaneChangeRef.current = onClockLaneChange;
 
   useEffect(() => {
     eggsRef.current = [];
@@ -118,6 +124,7 @@ export const useEggMovement = (
     speedLevelRef.current = 0;
 
     let previousLane: WolfPose | null = null;
+    let clockLaneIndex = 0;
     let movementTimer: number;
     let spawnTimer: number;
     const brokenEggTimers: number[] = [];
@@ -128,7 +135,13 @@ export const useEggMovement = (
         return;
       }
 
-      const lane = selectNextLane(gameMode, previousLane, Math.random());
+      const lane =
+        gameMode === 'clock' ? clockLanes[clockLaneIndex] : selectNextLane(gameMode, previousLane, Math.random());
+
+      if (gameMode === 'clock') {
+        clockLaneIndex = (clockLaneIndex + 1) % clockLanes.length;
+        onClockLaneChangeRef.current(lane);
+      }
 
       previousLane = lane;
       nextId.current += 1;
@@ -191,11 +204,11 @@ export const useEggMovement = (
           });
         }
 
-        if (caughtEggs > 0) {
+        if (caughtEggs > 0 && gameMode !== 'clock') {
           onEggCaughtRef.current(caughtEggs);
         }
 
-        if (missedEggs > 0) {
+        if (missedEggs > 0 && gameMode !== 'clock') {
           resetSpeed();
           onEggMissedRef.current(missedEggs);
         }
@@ -210,7 +223,7 @@ export const useEggMovement = (
     const accelerationTimer = window.setInterval(() => {
       const currentTimestamp = window.performance.now();
 
-      if (!isPausedRef.current && speedLevelRef.current < maxSpeedLevel) {
+      if (gameMode !== 'clock' && !isPausedRef.current && speedLevelRef.current < maxSpeedLevel) {
         activeTime += currentTimestamp - previousTimestamp;
 
         if (activeTime >= speedUpInterval) {

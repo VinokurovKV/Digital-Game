@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
 
 import style from './GameScreen.module.less';
@@ -19,8 +19,10 @@ type GameScreenProps = {
   record: number;
   misses: number;
   isGameOver: boolean;
+  isClockMode: boolean;
   onEggCaught: (caughtEggs: number) => void;
   onEggMissed: (missedEggs: number) => void;
+  onClockLaneChange: (lane: WolfPose) => void;
 };
 
 const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
@@ -113,6 +115,14 @@ const GameHud = memo(({ formattedRecord, formattedScore, misses, speedLevel }: G
   </>
 ));
 
+const formatTimePart = (value: number) => (value < 10 ? `0${value}` : String(value));
+
+const ClockHud = ({ time }: { time: Date }) => (
+  <text className={`${style.score} ${style.clock}`} x="400" y="55" textAnchor="middle">
+    {formatTimePart(time.getHours())}:{formatTimePart(time.getMinutes())}:{formatTimePart(time.getSeconds())}
+  </text>
+);
+
 export const GameScreen = ({
   wolfPose,
   isScreenOn,
@@ -124,9 +134,12 @@ export const GameScreen = ({
   record,
   misses,
   isGameOver,
+  isClockMode,
   onEggCaught,
   onEggMissed,
+  onClockLaneChange,
 }: GameScreenProps) => {
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const wolfPosition = wolfPose ? wolfPositions[wolfPose] : { x: 294, y: 120 };
   const formattedScore = formatScore(score);
   const formattedRecord = formatScore(record);
@@ -134,7 +147,26 @@ export const GameScreen = ({
     eggs: movingEggs,
     brokenEggs,
     speedLevel,
-  } = useEggMovement(gameMode, gameSession, isPaused || isGameOver, wolfPose, onEggCaught, onEggMissed);
+  } = useEggMovement(
+    isClockMode ? 'clock' : gameMode,
+    gameSession,
+    isPaused || isGameOver,
+    wolfPose,
+    onEggCaught,
+    onEggMissed,
+    onClockLaneChange,
+  );
+
+  useEffect(() => {
+    if (!isClockMode || !isScreenOn) {
+      return undefined;
+    }
+
+    setCurrentTime(new Date());
+    const clockTimer = window.setInterval(() => setCurrentTime(new Date()), 1000);
+
+    return () => window.clearInterval(clockTimer);
+  }, [isClockMode, isScreenOn]);
 
   return (
     <div className={style.frame}>
@@ -168,12 +200,16 @@ export const GameScreen = ({
           </g>
         ) : (
           <g>
-            <GameHud
-              formattedRecord={formattedRecord}
-              formattedScore={formattedScore}
-              misses={misses}
-              speedLevel={speedLevel}
-            />
+            {isClockMode ? (
+              <ClockHud time={currentTime} />
+            ) : (
+              <GameHud
+                formattedRecord={formattedRecord}
+                formattedScore={formattedScore}
+                misses={misses}
+                speedLevel={speedLevel}
+              />
+            )}
             <StaticScene />
 
             {movingEggs.map((egg) => (
