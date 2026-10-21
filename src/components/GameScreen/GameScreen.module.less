@@ -1,6 +1,7 @@
 .frame {
   position: relative;
   height: 100%;
+  contain: layout paint;
   padding: clamp(3px, 0.45vw, 7px);
   border-radius: clamp(8px, 1.4vw, 18px);
   background: transparent;
@@ -113,6 +114,13 @@
   fill: currentColor;
 }
 
+.woodRamp {
+  fill: url('#wood-tile');
+  stroke: #4b2e13;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
 .screenOff {
   fill: #343938;
 }
@@ -122,8 +130,8 @@
 }
 
 .noise {
-  opacity: 0.2;
-  mix-blend-mode: screen;
+  fill: url('#screen-noise');
+  opacity: 0.14;
 }
 
 .scanlines {
@@ -148,6 +156,7 @@
   }
 }
 
-.grass {
-  fill: currentColor;
+.ground {
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
 }

@@ -3,13 +3,13 @@ import { useCallback, useRef, useState } from 'react';
 export type GameSound = 'catch' | 'gameOver' | 'miss' | 'move' | 'pause' | 'screen' | 'start';
 
 const soundSources: Record<GameSound, string> = {
-  start: '/gamestart.mp3',
-  move: '/moving.mp3',
-  catch: '/eggcatch.mp3',
-  miss: '/eggbreak.mp3',
-  pause: '/pause.mp3',
-  screen: '/moving.mp3',
-  gameOver: '/game-over.mp3',
+  start: '/audio/gamestart.mp3',
+  move: '/audio/moving.mp3',
+  catch: '/audio/eggcatch.mp3',
+  miss: '/audio/eggbreak.mp3',
+  pause: '/audio/pause.mp3',
+  screen: '/audio/moving.mp3',
+  gameOver: '/audio/game-over.mp3',
 };
 
 const audioElements: Partial<Record<GameSound, HTMLAudioElement>> = {};

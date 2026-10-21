@@ -8,10 +8,10 @@ type BrokenEggProps = {
 export const BrokenEgg = ({ x, y }: BrokenEggProps) => (
   <g className={`${style.sprite} ${style.brokenEgg}`} transform={`translate(${x} ${y})`} aria-hidden="true">
     <g className={style.leftShell}>
-      <path className={style.line} d="M0 0-5-5-9 0l-5-4-4 6c-3 6 0 14 7 16 7 2 13-2 16-8Z" strokeWidth="4" />
+      <image href="/images/egg-half.png" x="-31" y="-12" width="34" height="26" preserveAspectRatio="xMidYMid meet" />
     </g>
     <g className={style.rightShell}>
-      <path className={style.line} d="M0 0 5-5 9 0l5-4 4 6c3 6 0 14-7 16-7 2-13-2-16-8Z" strokeWidth="4" />
+      <image href="/images/egg-half.png" x="-3" y="-12" width="34" height="26" preserveAspectRatio="xMidYMid meet" />
     </g>
     <g className={style.eggSplash}>
       <path className={style.line} d="m-8-10-5-9M0-13v-10m8 13 5-9M-15-5l-8-4m38 4 8-4" strokeWidth="3" />

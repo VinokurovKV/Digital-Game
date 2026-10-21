@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
 
 import style from './GameScreen.module.less';
@@ -22,14 +23,15 @@ type GameScreenProps = {
 };
 
 const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
-  topLeft: { x: 228, y: 90 },
-  bottomLeft: { x: 243, y: 215 },
-  topRight: { x: 510, y: 90 },
-  bottomRight: { x: 491, y: 215 },
+  topLeft: { x: 147, y: 60 },
+  bottomLeft: { x: 160, y: 225 },
+  topRight: { x: 460, y: 60 },
+  bottomRight: { x: 440, y: 225 },
 };
 
 const speedSteps = [8, 12, 16, 20, 24];
 const missSteps = [0, 1, 2, 3, 4];
+const groundTilePositions = [0, 166, 332, 498, 664];
 const formatScore = (value: number) => `0000${value}`.slice(-4);
 
 const SpeedScale = ({ level }: { level: number }) => (
@@ -48,23 +50,69 @@ const SpeedScale = ({ level }: { level: number }) => (
   </g>
 );
 
-const Ramp = ({
-  x,
-  y,
-  mirror = false,
-  gentle = false,
-}: {
-  x: number;
-  y: number;
-  mirror?: boolean;
-  gentle?: boolean;
-}) => (
-  <g transform={`translate(${x} ${y}) ${mirror ? 'scale(-1 1)' : ''}`}>
-    <path d="M0 0h142l-9 9H0z" />
-    <path d={gentle ? 'm78 7 82 41-6 8-84-43z' : 'm91 7 55 42-6 7L82 10z'} />
-    <path d="M17 6v54M40 6v39" fill="none" stroke="currentColor" strokeWidth="7" />
+const Ramp = ({ x, y, mirror = false }: { x: number; y: number; mirror?: boolean }) => (
+  <g className={style.woodRamp} transform={`translate(${x} ${y}) ${mirror ? 'scale(-1 1)' : ''}`}>
+    <rect width="142" height="12" rx="2" />
+    <path d="m91 8 57 42-8 10L82 15z" />
+    <rect x="14" y="10" width="9" height="51" rx="2" />
+    <rect x="36" y="10" width="9" height="36" rx="2" />
   </g>
 );
+
+const StaticScene = memo(() => (
+  <>
+    <Rabbit x={60} y={4} />
+    <Chicken x={8} y={27} />
+    <Ramp x={0} y={88} />
+    <Chicken x={8} y={180} />
+    <Ramp x={0} y={241} />
+    <Chicken x={792} y={27} mirrored />
+    <Ramp x={800} y={88} mirror />
+    <Chicken x={792} y={180} mirrored />
+    <Ramp x={800} y={241} mirror />
+
+    <g className={style.ground}>
+      {groundTilePositions.map((x) => (
+        <svg key={x} x={x} y="400" width="166" height="40" viewBox="0 0 160 40" overflow="hidden">
+          <image href="/images/ground.png" width="160" height="160" preserveAspectRatio="none" />
+        </svg>
+      ))}
+    </g>
+  </>
+));
+
+type GameHudProps = {
+  formattedRecord: string;
+  formattedScore: string;
+  misses: number;
+  speedLevel: number;
+};
+
+const GameHud = memo(({ formattedRecord, formattedScore, misses, speedLevel }: GameHudProps) => (
+  <>
+    <SpeedScale level={speedLevel} />
+    <text className={style.recordLabel} x="245" y="16" textAnchor="middle">
+      РЕКОРД
+    </text>
+    <text className={style.score} x="245" y="55" textAnchor="middle">
+      {formattedRecord}
+    </text>
+    <text className={style.score} x="400" y="55" textAnchor="middle">
+      {formattedScore}
+    </text>
+    <g className={style.misses} transform="translate(503 38)">
+      {missSteps.map((missStep) => (
+        <circle
+          key={missStep}
+          className={missStep < misses ? style.missActive : style.miss}
+          cx={missStep * 24}
+          cy="0"
+          r="9"
+        />
+      ))}
+    </g>
+  </>
+));
 
 export const GameScreen = ({
   wolfPose,
@@ -80,7 +128,7 @@ export const GameScreen = ({
   onEggCaught,
   onEggMissed,
 }: GameScreenProps) => {
-  const wolfPosition = wolfPose ? wolfPositions[wolfPose] : { x: 390, y: 145 };
+  const wolfPosition = wolfPose ? wolfPositions[wolfPose] : { x: 294, y: 120 };
   const formattedScore = formatScore(score);
   const formattedRecord = formatScore(record);
   const {
@@ -99,57 +147,35 @@ export const GameScreen = ({
         aria-label={isScreenOn ? 'Игровой LCD-экран с волком, четырьмя лотками и яйцами' : 'Выключенный игровой экран'}
       >
         <defs>
-          <filter id="soft-lcd">
-            <feGaussianBlur stdDeviation="0.25" />
-          </filter>
-          <filter id="screen-noise" x="0" y="0" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.75 0.18" numOctaves="2" seed="7" />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
           <pattern id="scanlines" width="8" height="8" patternUnits="userSpaceOnUse">
             <rect width="8" height="2" fill="#d9dfdb" opacity="0.16" />
+          </pattern>
+          <pattern id="screen-noise" width="24" height="18" patternUnits="userSpaceOnUse">
+            <rect width="3" height="2" x="2" y="3" />
+            <rect width="2" height="1" x="13" y="8" />
+            <rect width="4" height="1" x="18" y="14" />
+            <rect width="1" height="2" x="8" y="15" />
+          </pattern>
+          <pattern id="wood-tile" width="16" height="16" patternUnits="userSpaceOnUse">
+            <image href="/images/woodtiles2.png" width="64" height="39" preserveAspectRatio="none" />
           </pattern>
         </defs>
 
         {!isScreenOn ? (
           <g className={style.interference}>
             <rect className={style.screenOff} width="800" height="440" />
-            <rect className={style.noise} width="800" height="440" filter="url(#screen-noise)" />
+            <rect className={style.noise} width="800" height="440" />
             <rect className={style.scanlines} width="800" height="440" />
           </g>
         ) : (
-          <g filter="url(#soft-lcd)">
-            <SpeedScale level={speedLevel} />
-            <text className={style.recordLabel} x="245" y="16" textAnchor="middle">
-              РЕКОРД
-            </text>
-            <text className={style.score} x="245" y="55" textAnchor="middle">
-              {formattedRecord}
-            </text>
-            <text className={style.score} x="400" y="55" textAnchor="middle">
-              {formattedScore}
-            </text>
-            <g className={style.misses} transform="translate(503 38)">
-              {missSteps.map((missStep) => (
-                <circle
-                  key={missStep}
-                  className={missStep < misses ? style.missActive : style.miss}
-                  cx={missStep * 24}
-                  cy="0"
-                  r="9"
-                />
-              ))}
-            </g>
-
-            <Rabbit x={110} y={17} scale={0.52} />
-            <Chicken x={8} y={27} />
-            <Ramp x={0} y={88} />
-            <Chicken x={8} y={145} />
-            <Ramp x={0} y={206} gentle />
-            <Chicken x={792} y={27} mirrored />
-            <Ramp x={800} y={88} mirror />
-            <Chicken x={792} y={145} mirrored />
-            <Ramp x={800} y={206} mirror gentle />
+          <g>
+            <GameHud
+              formattedRecord={formattedRecord}
+              formattedScore={formattedScore}
+              misses={misses}
+              speedLevel={speedLevel}
+            />
+            <StaticScene />
 
             {movingEggs.map((egg) => (
               <Egg key={egg.id} x={egg.x} y={egg.y} />
@@ -159,12 +185,7 @@ export const GameScreen = ({
               <BrokenEgg key={egg.id} x={egg.x} y={egg.y} />
             ))}
 
-            <Wolf x={wolfPosition.x} y={wolfPosition.y} scale={0.98} pose={wolfPose} />
-
-            <path
-              className={style.grass}
-              d="M0 427c19-22 30-28 35 0 18-33 28-30 37 0 19-28 27-24 35 0 24-31 34-27 42 0 25-30 38-28 46 0 20-27 32-25 40 0 26-34 38-30 48 0 22-30 34-27 43 0 22-28 34-25 43 0 26-34 40-29 49 0 22-31 36-28 45 0 28-35 40-30 49 0 24-31 35-28 44 0 26-33 40-29 49 0 22-28 34-24 42 0 20-30 32-25 40 0 20-27 30-22 36 0H0Z"
-            />
+            <Wolf x={wolfPosition.x} y={wolfPosition.y} pose={wolfPose} />
           </g>
         )}
       </svg>
