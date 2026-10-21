@@ -60,16 +60,16 @@ module.exports = {
     'import/no-restricted-paths': [
       'error',
       {
-        'zones': [
+        zones: [
           // {
           //   'target': './src/client',
           //   'from': './src/server',
           //   'message': 'Export to the "./src/client" from "./src/server" is prohibited',
           // },
           {
-            'target': ['./client'],
-            'from': ['./src/server', './server'],
-            'message': 'Export to the "["./client", "./src/client"]" from ["./src/server", "./server"] is prohibited',
+            target: ['./client'],
+            from: ['./src/server', './server'],
+            message: 'Export to the "["./client", "./src/client"]" from ["./src/server", "./server"] is prohibited',
           },
           // Replace the top 2 rules after fixing (129 errors) imports from the server to ./src/client
           // {
@@ -84,14 +84,15 @@ module.exports = {
           //   'message': 'Export to the "./src/client" from "./server" is prohibited',
           // },
           {
-            'target': ['./server', './src/server'],
-            'from': ['./src/client', './client'],
-            'message': 'Export to the ["./server", "./src/server"] from ["./src/client", "./client"] is prohibited',
+            target: ['./server', './src/server'],
+            from: ['./src/client', './client'],
+            message: 'Export to the ["./server", "./src/server"] from ["./src/client", "./client"] is prohibited',
           },
           {
-            'target': './@mainShared',
-            'from': ['./src/server', './src/client', './client', './server'],
-            'message': 'Export to the "./@mainShared" from ["./src/server", "./src/client", "./client", "./server"] is prohibited',
+            target: './@mainShared',
+            from: ['./src/server', './src/client', './client', './server'],
+            message:
+              'Export to the "./@mainShared" from ["./src/server", "./src/client", "./client", "./server"] is prohibited',
           },
         ],
       },

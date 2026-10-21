@@ -74,7 +74,6 @@ module.exports = {
         // '@typescript-eslint/restrict-plus-operands': 'error', need ts config
         '@typescript-eslint/no-explicit-any': 'off',
         camelcase: 'off',
-        '@typescript-eslint/camelcase': 'off',
         '@typescript-eslint/naming-convention': [
           'error',
           {
@@ -95,15 +94,15 @@ module.exports = {
             filter: {
               regex: '(KLPRSS_Val|KLPRSS_Mnd)',
               match: false,
-            }
+            },
           },
           {
             selector: 'enum',
-            format: ['PascalCase']
+            format: ['PascalCase'],
           },
           {
             selector: 'enumMember',
-            format: ['PascalCase']
+            format: ['PascalCase'],
           },
         ],
         '@typescript-eslint/ban-ts-comment': 'warn',

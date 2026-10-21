@@ -6,6 +6,9 @@ module.exports = {
     },
   },
   parserOptions: { tsconfigRootDir: __dirname },
+  rules: {
+    'no-console': ['error', { allow: ['warn', 'error'] }],
+  },
   globals: {
     runtime: 'readonly',
     _: 'readonly',
