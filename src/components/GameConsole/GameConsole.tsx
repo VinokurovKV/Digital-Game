@@ -22,6 +22,23 @@ const movementKeys: Record<string, WolfPose> = {
 
 const recordStorageKey = 'nu-pogodi-record';
 
+type RoboModeButtonProps = {
+  isActive: boolean;
+  isDisabled: boolean;
+  onClick: () => void;
+};
+
+const RoboModeButton = ({ isActive, isDisabled, onClick }: RoboModeButtonProps) => (
+  <button
+    className={`${style.roboButton} ${isActive ? style.roboButtonActive : ''}`}
+    type="button"
+    aria-label={isActive ? 'Выключить роборежим' : 'Включить роборежим'}
+    aria-pressed={isActive}
+    disabled={isDisabled}
+    onClick={onClick}
+  />
+);
+
 const loadRecord = (): number => {
   try {
     const storedRecord = Number(window.localStorage.getItem(recordStorageKey));
@@ -50,6 +67,7 @@ export const GameConsole = () => {
   const [misses, setMisses] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isClockMode, setIsClockMode] = useState(false);
+  const [isRoboMode, setIsRoboMode] = useState(false);
   const { isSoundEnabled, playSound, toggleSound } = useGameAudio();
 
   const startGame = (mode: GameMode) => {
@@ -103,6 +121,7 @@ export const GameConsole = () => {
 
     if (isScreenOn) {
       setIsClockMode(false);
+      setIsRoboMode(false);
       setGameMode(null);
       setWolfPose(null);
       setIsPaused(false);
@@ -113,6 +132,11 @@ export const GameConsole = () => {
     }
 
     setIsScreenOn(!isScreenOn);
+  };
+
+  const toggleRoboMode = () => {
+    playSound('screen');
+    setIsRoboMode((currentMode) => !currentMode);
   };
 
   useEffect(() => {
@@ -171,7 +195,7 @@ export const GameConsole = () => {
   }, [gameMode, isGameOver, isScreenOn, playSound]);
 
   useEffect(() => {
-    if (!isScreenOn || gameMode === null || isPaused || isGameOver) {
+    if (!isScreenOn || gameMode === null || isPaused || isGameOver || isRoboMode) {
       return undefined;
     }
 
@@ -194,7 +218,7 @@ export const GameConsole = () => {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameMode, isGameOver, isPaused, isScreenOn, playSound]);
+  }, [gameMode, isGameOver, isPaused, isRoboMode, isScreenOn, playSound]);
 
   return (
     <section className={style.shell} aria-label="Электронная игра Ну, погоди!">
@@ -203,6 +227,7 @@ export const GameConsole = () => {
           <div className={style.badge} aria-hidden="true">
             <span>ИМ</span>
           </div>
+          <RoboModeButton isActive={isRoboMode} isDisabled={!isScreenOn} onClick={toggleRoboMode} />
         </aside>
 
         <div className={style.gameArea}>
@@ -220,7 +245,8 @@ export const GameConsole = () => {
               misses={misses}
               isGameOver={isGameOver}
               isClockMode={isClockMode}
-              onClockLaneChange={setWolfPose}
+              isRoboMode={isRoboMode}
+              onAutomaticLaneChange={setWolfPose}
               onEggCaught={(caughtEggs) => {
                 playSound('catch');
                 setScore((currentScore) => addScore(currentScore, caughtEggs));
@@ -295,7 +321,7 @@ export const GameConsole = () => {
             direction="upLeft"
             label="Левая верхняя позиция"
             isActive={wolfPose === 'topLeft'}
-            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver || isRoboMode}
             onClick={() => {
               playSound('move');
               setWolfPose('topLeft');
@@ -305,7 +331,7 @@ export const GameConsole = () => {
             direction="downLeft"
             label="Левая нижняя позиция"
             isActive={wolfPose === 'bottomLeft'}
-            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver || isRoboMode}
             onClick={() => {
               playSound('move');
               setWolfPose('bottomLeft');
@@ -317,7 +343,7 @@ export const GameConsole = () => {
             direction="upRight"
             label="Правая верхняя позиция"
             isActive={wolfPose === 'topRight'}
-            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver || isRoboMode}
             onClick={() => {
               playSound('move');
               setWolfPose('topRight');
@@ -327,7 +353,7 @@ export const GameConsole = () => {
             direction="downRight"
             label="Правая нижняя позиция"
             isActive={wolfPose === 'bottomRight'}
-            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver}
+            disabled={!isScreenOn || gameMode === null || isPaused || isGameOver || isRoboMode}
             onClick={() => {
               playSound('move');
               setWolfPose('bottomRight');

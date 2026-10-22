@@ -43,7 +43,8 @@ type UseEggMovementOptions = {
   wolfPose: WolfPose | null;
   onEggCaught: (caughtEggs: number) => void;
   onEggMissed: (missedEggs: number) => void;
-  onClockLaneChange: (lane: WolfPose) => void;
+  isAutoCatchEnabled: boolean;
+  onAutomaticLaneChange: (lane: WolfPose) => void;
 };
 
 const eggPaths: Record<WolfPose, Point[]> = {
@@ -99,7 +100,8 @@ export const useEggMovement = ({
   wolfPose,
   onEggCaught,
   onEggMissed,
-  onClockLaneChange,
+  isAutoCatchEnabled,
+  onAutomaticLaneChange,
 }: UseEggMovementOptions): EggMovementState => {
   const [eggs, setEggs] = useState<MovingEggState[]>([]);
   const [brokenEggs, setBrokenEggs] = useState<BrokenEggState[]>([]);
@@ -111,13 +113,15 @@ export const useEggMovement = ({
   const wolfPoseRef = useRef(wolfPose);
   const onEggCaughtRef = useRef(onEggCaught);
   const onEggMissedRef = useRef(onEggMissed);
-  const onClockLaneChangeRef = useRef(onClockLaneChange);
+  const isAutoCatchEnabledRef = useRef(isAutoCatchEnabled);
+  const onAutomaticLaneChangeRef = useRef(onAutomaticLaneChange);
 
   isPausedRef.current = isPaused;
   wolfPoseRef.current = wolfPose;
   onEggCaughtRef.current = onEggCaught;
   onEggMissedRef.current = onEggMissed;
-  onClockLaneChangeRef.current = onClockLaneChange;
+  isAutoCatchEnabledRef.current = isAutoCatchEnabled;
+  onAutomaticLaneChangeRef.current = onAutomaticLaneChange;
 
   useEffect(() => {
     eggsRef.current = [];
@@ -150,7 +154,7 @@ export const useEggMovement = ({
 
       if (gameMode === 'clock') {
         clockLaneIndex = (clockLaneIndex + 1) % clockLanes.length;
-        onClockLaneChangeRef.current(lane);
+        onAutomaticLaneChangeRef.current(lane);
       }
 
       previousLane = lane;
@@ -184,7 +188,7 @@ export const useEggMovement = ({
           const nextStep = egg.step + 1;
 
           if (nextStep >= eggPaths[egg.lane].length) {
-            if (wolfPoseRef.current === egg.lane) {
+            if (isAutoCatchEnabledRef.current || wolfPoseRef.current === egg.lane) {
               caughtEggs += 1;
             } else {
               missedEggs += 1;

@@ -3,7 +3,7 @@ import { memo, useEffect, useState } from 'react';
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
 
 import { formatScore } from '../../game/gameRules';
-import { BrokenEgg, Chicken, Egg, Rabbit, Wolf } from '../GameSprites';
+import { BrokenEgg, Chicken, Egg, PeekingWolf, Rabbit, RoboRabbit, Wolf } from '../GameSprites';
 import type { WolfPose } from '../GameSprites';
 
 import style from './GameScreen.module.less';
@@ -22,9 +22,10 @@ type GameScreenProps = {
   misses: number;
   isGameOver: boolean;
   isClockMode: boolean;
+  isRoboMode: boolean;
   onEggCaught: (caughtEggs: number) => void;
   onEggMissed: (missedEggs: number) => void;
-  onClockLaneChange: (lane: WolfPose) => void;
+  onAutomaticLaneChange: (lane: WolfPose) => void;
 };
 
 const wolfPositions: Record<WolfPose, { x: number; y: number }> = {
@@ -62,9 +63,9 @@ const Ramp = ({ x, y, mirror = false }: { x: number; y: number; mirror?: boolean
   </g>
 );
 
-const StaticScene = memo(() => (
+const StaticScene = memo(({ isRoboMode }: { isRoboMode: boolean }) => (
   <>
-    <Rabbit x={60} y={4} />
+    {isRoboMode ? <PeekingWolf x={60} y={-4} /> : <Rabbit x={60} y={4} />}
     <Chicken x={8} y={27} />
     <Ramp x={0} y={88} />
     <Chicken x={8} y={180} />
@@ -161,9 +162,10 @@ export const GameScreen = ({
   misses,
   isGameOver,
   isClockMode,
+  isRoboMode,
   onEggCaught,
   onEggMissed,
-  onClockLaneChange,
+  onAutomaticLaneChange,
 }: GameScreenProps) => {
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const wolfPosition = wolfPose ? wolfPositions[wolfPose] : { x: 294, y: 120 };
@@ -180,7 +182,8 @@ export const GameScreen = ({
     wolfPose,
     onEggCaught,
     onEggMissed,
-    onClockLaneChange,
+    isAutoCatchEnabled: isRoboMode || isClockMode,
+    onAutomaticLaneChange,
   });
 
   useEffect(() => {
@@ -236,7 +239,7 @@ export const GameScreen = ({
                 speedLevel={speedLevel}
               />
             )}
-            <StaticScene />
+            <StaticScene isRoboMode={isRoboMode} />
 
             {movingEggs.map((egg) => (
               <Egg key={egg.id} x={egg.x} y={egg.y} />
@@ -246,7 +249,11 @@ export const GameScreen = ({
               <BrokenEgg key={egg.id} x={egg.x} y={egg.y} />
             ))}
 
-            <Wolf x={wolfPosition.x} y={wolfPosition.y} pose={wolfPose} />
+            {isRoboMode ? (
+              <RoboRabbit x={294} y={120} />
+            ) : (
+              <Wolf x={wolfPosition.x} y={wolfPosition.y} pose={wolfPose} />
+            )}
           </g>
         )}
       </svg>
